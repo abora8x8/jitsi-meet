@@ -305,6 +305,21 @@ function update_session(event)
     end
 end
 
+function handle_create_lobby(event)
+    local room = event.room;
+    room:set_members_only(true);
+    room:save();
+    module:log("debug","Create lobby room for %s",room.jid);
+    local node = jid_split(room.jid);
+    local lobby_room_jid = node .. '@' .. lobby_muc_component_config;
+    if not lobby_muc_service.get_room_from_jid(lobby_room_jid) then
+        local new_room = lobby_muc_service.create_room(lobby_room_jid);
+        new_room.main_room = room;
+        room._data.lobbyroom = new_room;
+    end
+end
+
 module:hook_global("bosh-session", update_session);
 module:hook_global("websocket-session", update_session);
 module:hook_global('config-reloaded', load_config);
+module:hook_global("create-lobby-room", handle_create_lobby);
