@@ -390,6 +390,18 @@ function handle_destroy_lobby(event)
     destroy_lobby_room(event.room, event.newjid, event.message);
 end
 
+function handle_whitelisting(event)
+    local room, invitee, occupant = event.room, event.invitee, event.occupant;
+    module:log("debug", "Whitelist invitee %s", invitee)
+    local affiliation = room:get_affiliation(invitee);
+    if not affiliation or affiliation == 0 then
+        occupant.role = 'participant';
+        room:set_affiliation(true, jid_bare(invitee), 'member');
+        room:save();
+    end
+end
+
 module:hook_global('config-reloaded', load_config);
 module:hook_global('create-lobby-room', handle_create_lobby);
 module:hook_global('destroy-lobby-room', handle_destroy_lobby);
+module:hook_global('whitelist-participant', handle_whitelisting);
